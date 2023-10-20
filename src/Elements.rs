@@ -1,32 +1,25 @@
 use std::fmt;
 
 pub struct Element {
+    id: [char; 2],
     name: String,
     rgb: (u8, u8, u8),
 }
 
 impl Element {
-    pub fn new(name: String, rgb: (u8, u8, u8)) -> Self {
+    pub fn new(id: [char; 2], name: String, rgb: (u8, u8, u8)) -> Self {
         Self {
+            id,
             name,
             rgb
         }
-    }
-    
-    pub fn get_brightness(&self) -> u8 {
-        let r = self.rgb.0 as u32;
-        let g = self.rgb.1 as u32;
-        let b = self.rgb.2 as u32;
-
-        let brightness = (r + g + b) / 3;
-
-        brightness as u8
     }
 }
 
 impl fmt::Display for Element {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} ({}, {}, {})",
+        write!(f, "{} {} ({}, {}, {})",
+            self.id.iter().collect::<String>(),
             self.name,
             self.rgb.0,
             self.rgb.1,

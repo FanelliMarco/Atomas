@@ -8,6 +8,7 @@ fn main() {
     let reader = BufReader::new(file);
     
     let hydrogen = Element::new(
+        ['H','e'],
         "Hydrogen".to_string(),
         (10,12,14)
     );
