@@ -6,6 +6,11 @@ pub struct Element {
     rgb: (u8, u8, u8),
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct Data {
+    elements: Vec<Element>,
+}
+
 impl Element {
     pub fn new(id: [char; 2], name: String, rgb: (u8, u8, u8)) -> Self {
         Self {
@@ -13,6 +18,19 @@ impl Element {
             name,
             rgb
         }
+    }    
+}
+
+impl Data {
+pub fn load(path: &str) -> Data {
+         let file = File::open("../assets/txt/elements.txt").unwrap();
+         let reader = BufReader::new(file);
+         let elements = Vec::new();
+         for line in reader.lines() {
+             
+         }
+
+
     }
 }
 
