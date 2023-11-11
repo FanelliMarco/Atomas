@@ -23,9 +23,9 @@ impl Id {
 
 #[derive(Serialize, Deserialize)]
 pub struct Element {
-    id: Id,
-    name: String,
-    rgb: (u8, u8, u8),
+    pub id: Id,
+    pub name: String,
+    pub rgb: (u8, u8, u8),
 }
 
 impl Element {
