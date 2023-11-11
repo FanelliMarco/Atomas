@@ -1,12 +1,13 @@
 // use std::fs::File;
 // use std::io::{BufReader};
 mod elements;
-use crate::elements::Element;
+use crate::elements::{Data, Element};
 
 fn main() {
-    let hydrogen = Element::new("He", "Hydrogen".to_string(), (10, 12, 14));
-    let plus = Element::new("+", "_Plus".to_string(), (201, 66, 62));
+    let path = "C:/Obsidian/Rust/atomas/assets/txt/elements.txt";
+    let data = elements::Data::load(path);
 
-    println!("{}", hydrogen);
-    println!("{}", plus);
+    for element in &data.elements {
+        println!("{}", element);
+    }
 }
