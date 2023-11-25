@@ -3,8 +3,8 @@ use std::fmt;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-#[derive(Serialize, Deserialize)]
-enum Id {
+#[derive(Serialize, Deserialize, Eq, PartialEq, Hash)]
+pub enum Id {
     Single(char),
     Double([char; 2]),
     Triple([char; 3]),
@@ -21,7 +21,7 @@ impl Id {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Hash)]
 pub struct Element {
     pub id: Id,
     pub name: String,
