@@ -5,20 +5,17 @@
 use image::GenericImageView;
 use palette::color_difference::EuclideanDistance;
 use palette::Srgb;
-use palette::Srgb::D65;
 use palette::{FromColor, Lab};
 use std::collections::HashSet;
 
 use crate::elements::{Data, Element};
 
-fn rgb_to_lab(rgb: (u8, u8, u8)) -> Lab<Srgb, f32> {
+fn rgb_to_lab(rgb: (u8, u8, u8)) -> Lab {
     let rgb = Srgb::new(
         rgb.0 as f32 / 255.0,
         rgb.1 as f32 / 255.0,
         rgb.2 as f32 / 255.0,
     );
-
-    let rgb = D65.into_linear().apply_gamma(rgb);
 
     let lab = Lab::from_color(rgb);
 
@@ -49,7 +46,7 @@ pub fn find_elements_in_image(data: &Data) -> HashSet<&Element> {
                 let distance = distance_lab(pixel_rgb, element_rgb);
 
                 // You can adjust the threshold value based on your needs
-                if distance < 10.0 {
+                if distance < 5.0 {
                     elements_set.insert(element);
                 }
             }
