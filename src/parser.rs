@@ -1,57 +1,50 @@
 /*
 * takes an image of the board, and outputs the current game state in some format
 */
-
-use image::GenericImageView;
-use palette::color_difference::EuclideanDistance;
-use palette::Srgb;
-use palette::{FromColor, Lab};
-use std::collections::HashSet;
+/*
+ * 2023-12-17
+ * Choosed to use template matching
+*/
+use image::{GenericImageView, ImageBuffer, RgbImage};
+use template_matching::{match_template, MatchTemplateMethod, TemplateMatcher};
 
 use crate::elements::{Data, Element};
 
-fn rgb_to_lab(rgb: (u8, u8, u8)) -> Lab {
-    let rgb = Srgb::new(
-        rgb.0 as f32 / 255.0,
-        rgb.1 as f32 / 255.0,
-        rgb.2 as f32 / 255.0,
-    );
+pub fn find_elements_in_image(data: &Data) -> Vec<&Element> {
+    let path = "C:/Obsidian/Rust/atomas/assets/jpg/board.jpg";
+    let input_image = image::open(path).unwrap().to_rgb8();
 
-    let lab = Lab::from_color(rgb);
+    let mut found_elements = Vec::new();
 
-    lab
-}
+    for element in &data.elements {
+        let template_image = create_template_for_element(element);
 
-fn distance_lab(rgb1: (u8, u8, u8), rgb2: (u8, u8, u8)) -> f32 {
-    let lab1 = rgb_to_lab(rgb1);
-    let lab2 = rgb_to_lab(rgb2);
-
-    lab1.distance(lab2)
-}
-
-pub fn find_elements_in_image(data: &Data) -> HashSet<&Element> {
-    let path = "C:/Obsidian/Rust/atomas/assets/jpg/merge.jpg";
-
-    let image = image::open(path).expect("Failed to open image");
-
-    let mut elements_set = HashSet::new();
-
-    for x in 0..image.width() {
-        for y in 0..image.height() {
-            let pixel = image.get_pixel(x, y);
-            let pixel_rgb = (pixel[0], pixel[1], pixel[2]);
-
-            for element in &data.elements {
-                let element_rgb = element.rgb;
-                let distance = distance_lab(pixel_rgb, element_rgb);
-
-                // You can adjust the threshold value based on your needs
-                if distance < 5.0 {
-                    elements_set.insert(element);
-                }
-            }
+        let mut matcher = TemplateMatcher::new();
+        matcher.match_template(&input_image, &template_image, MatchTemplateMethod::SumOfSquaredDifferences);
+        let result = matcher.wait_for_result().unwrap();
+        
+        if let Some(location) = find_best_match_location(&result) {
+            found_elements.push(element.clone());
         }
     }
 
-    elements_set
+    found_elements
+}
+
+fn create_template_for_element(element: &Element) -> RgbImage {
+    let (width, height) = (30, 30);
+    
+    ImageBuffer::from_fn(width, height, |x, y| {
+        if x > 5 && x < width-5 && y > 5 && y < height-5 {
+            Rgb([element.rgb.0, element.rgb.1, element.rgb.2]) 
+        } else {
+            Rgb([255, 255, 255])
+        }
+    })
+}
+
+fn find_best_match_location(result: &image::ImageBuffer<f32, Vec<f32>>) -> Option<(u32, u32)> {
+    template_matching::find_extremes(result)
+        .first()
+        .map(|(x, y)| (x as u32, y as u32))
 }
