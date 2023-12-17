@@ -1,5 +1,3 @@
-// use std::fs::File;
-// use std::io::{BufReader};
 mod elements;
 mod parser;
 
