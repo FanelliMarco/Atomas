@@ -13,6 +13,13 @@ pub fn find_elements_in_image(data: &Data) -> Vec<&Element> {
     let input_image = image::open(path).unwrap().to_luma32f();
     let mut found_elements = Vec::new();
 
+    // Initialize the output image outside the loop
+    let mut output = RgbaImage::from_pixel(
+        input_image.width(),
+        input_image.height(),
+        Rgba([0, 0, 0, 255]),
+    );
+
     for element in &data.elements {
         let mut missing_templates = Vec::new();
 
@@ -34,28 +41,17 @@ pub fn find_elements_in_image(data: &Data) -> Vec<&Element> {
 
         let result = matcher.wait_for_result().unwrap();
 
-        let mut output = RgbaImage::from_pixel(
-            input_image.width(),
-            input_image.height(),
-            Rgba([0, 0, 0, 255]),
-        );
-
         let extremes = find_extremes(&result);
 
         if let location = extremes.min_value_location {
             let (x, y) = location;
             draw_rectangle(&mut output, x, y, 180, 180, element.rgb);
-        }
-
-        output
-            .save("C:/Obsidian/Rust/atomas/assets/png/outputs/output.png")
-            .unwrap();
-
-        if let location = extremes.min_value_location {
-            let (x, y) = location;
             found_elements.push(element);
         }
     }
+
+    // Save the output image after processing all elements
+    output.save("C:/Obsidian/Rust/atomas/assets/png/outputs/output.png").unwrap();
 
     found_elements
 }
