@@ -1,17 +1,18 @@
+mod circularlist;
 mod elements;
+mod gamestate;
 mod parser;
 
-#[allow(unused_imports)]
-use crate::elements::{Data, Element};
+use crate::elements::Data;
+use crate::gamestate::*;
 use crate::parser::*;
 
 fn main() {
     let path = "C:/Obsidian/Rust/atomas/assets/txt/elements.txt";
     let data = elements::Data::load(path);
 
-    let mut elements_set = find_elements_in_image(&data);
+    let board_image_path = "C:/Obsidian/Rust/atomas/assets/jpg/board.jpg";
+    let game_state = detect_game_state(board_image_path, &data);
 
-    for element in elements_set {
-        println!("{}", element);
-    }
+    println!("Detected Game State: {:?}", game_state);
 }

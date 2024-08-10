@@ -3,7 +3,7 @@ use std::fmt;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-#[derive(Serialize, Deserialize, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub enum Id {
     Single(char),
     Double([char; 2]),
@@ -21,7 +21,7 @@ impl Id {
     }
 }
 
-#[derive(Serialize, Deserialize, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct Element {
     pub id: Id,
     pub name: String,
@@ -52,7 +52,7 @@ impl fmt::Display for Element {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Data {
     pub elements: Vec<Element>,
 }

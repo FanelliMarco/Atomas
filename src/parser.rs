@@ -1,19 +1,19 @@
-/*
-* takes an image of the board, and outputs the current game state in some format
-*/
-
-use image::{ImageBuffer, Luma};
-use image::{Rgba, RgbaImage};
+use image::{ImageBuffer, Luma, Rgba, RgbaImage};
+use std::borrow::Cow;
 use template_matching::{find_extremes, Image, MatchTemplateMethod, TemplateMatcher};
 
+use crate::circularlist::CircularList;
 use crate::elements::{Data, Element};
+use crate::gamestate::GameState;
 
-pub fn find_elements_in_image(data: &Data) -> Vec<&Element> {
-    let path = "C:/Obsidian/Rust/atomas/assets/jpg/board.jpg";
-    let input_image = image::open(path).unwrap().to_luma32f();
-    let mut found_elements = Vec::new();
+pub fn detect_game_state(input_image_path: &str, data: &Data) -> GameState {
+    let input_image = image::open(input_image_path).unwrap().to_luma32f();
+    let mut ring = CircularList::new();
+    let mut player_atom: Option<Element> = None;
+    let mut max_value = 1;
+    let mut score = 0;
 
-    // Initialize the output image outside the loop
+    // Initialize the output image for visualization
     let mut output = RgbaImage::from_pixel(
         input_image.width(),
         input_image.height(),
@@ -21,39 +21,61 @@ pub fn find_elements_in_image(data: &Data) -> Vec<&Element> {
     );
 
     for element in &data.elements {
-        let mut missing_templates = Vec::new();
-
         let template_image = match load_template_for_element(&element) {
             Some(img) => img,
             None => {
-                missing_templates.push(element.name.clone());
+                eprintln!("Missing template for element: {}", element.name);
                 continue;
             }
         };
 
         let mut matcher = TemplateMatcher::new();
-
+        let input_image_tm = Image::new(
+            input_image.as_raw().to_vec(),
+            input_image.width(),
+            input_image.height(),
+        );
+        let template_image_tm = Image::new(
+            template_image.as_raw().to_vec(),
+            template_image.width(),
+            template_image.height(),
+        );
         matcher.match_template(
-            &input_image,
-            &template_image,
+            input_image_tm,
+            template_image_tm,
             MatchTemplateMethod::SumOfSquaredDifferences,
         );
 
         let result = matcher.wait_for_result().unwrap();
-
         let extremes = find_extremes(&result);
 
-        if let location = extremes.min_value_location {
-            let (x, y) = location;
-            draw_rectangle(&mut output, x, y, 180, 180, element.rgb);
-            found_elements.push(element);
+        let (x, y) = extremes.min_value_location;
+        draw_rectangle(&mut output, x, y, 180, 180, element.rgb);
+
+        // Determine if this is the player atom or part of the ring
+        if is_player_atom_position(x, y, input_image.width(), input_image.height()) {
+            player_atom = Some(element.clone());
+        } else {
+            let index = calculate_ring_index(x, y, input_image.width(), input_image.height());
+            ring.insert(element.clone(), index);
         }
+
+        // Update max_value if necessary
+        max_value = max_value.max(element_to_value(&element));
     }
 
-    // Save the output image after processing all elements
-    output.save("C:/Obsidian/Rust/atomas/assets/png/outputs/output.png").unwrap();
+    // Save the output image for visualization
+    output
+        .save("C:/Obsidian/Rust/atomas/assets/png/outputs/detected_state.png")
+        .unwrap();
 
-    found_elements
+    // Create and return the GameState
+    GameState {
+        ring,
+        player_atom: player_atom.unwrap_or_else(|| data.elements[0].clone()),
+        max_value,
+        score,
+    }
 }
 
 fn load_template_for_element(element: &Element) -> Option<ImageBuffer<Luma<f32>, Vec<f32>>> {
@@ -69,11 +91,6 @@ fn load_template_for_element(element: &Element) -> Option<ImageBuffer<Luma<f32>,
             None
         }
     }
-}
-
-fn find_best_match_location(result: &Image) -> Option<(u32, u32)> {
-    let extremes = find_extremes(&result);
-    Some(extremes.min_value_location)
 }
 
 fn draw_rectangle(
@@ -96,4 +113,24 @@ fn draw_rectangle(
             image.put_pixel(current_x, current_y, Rgba([rgb.0, rgb.1, rgb.2, 255]));
         }
     }
+}
+
+fn is_player_atom_position(x: u32, y: u32, width: u32, height: u32) -> bool {
+    let center_x = width / 2;
+    let center_y = height / 2;
+
+    (x as i32 - center_x as i32).abs() < 50 && (y as i32 - center_y as i32).abs() < 50
+}
+
+fn calculate_ring_index(x: u32, y: u32, width: u32, height: u32) -> usize {
+    let center_x = width / 2;
+    let center_y = height / 2;
+    let angle = ((y as f32 - center_y as f32).atan2(x as f32 - center_x as f32)
+        + std::f32::consts::PI)
+        % (2.0 * std::f32::consts::PI);
+    (angle / (2.0 * std::f32::consts::PI) * 12.0).round() as usize % 12
+}
+
+fn element_to_value(element: &Element) -> i32 {
+    element.name.chars().next().map(|c| c as i32).unwrap_or(0)
 }
