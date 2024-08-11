@@ -2,3 +2,4 @@
 Cargo.lock
 src/log.txt
 assets/png/outputs/output.png
+*.bat

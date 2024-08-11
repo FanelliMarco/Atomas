@@ -1,15 +1,13 @@
-use image::{ImageBuffer, Luma, Rgba, RgbaImage};
-use std::borrow::Cow;
-use template_matching::{find_extremes, Image, MatchTemplateMethod, TemplateMatcher};
-
 use crate::circularlist::CircularList;
 use crate::elements::{Data, Element};
 use crate::gamestate::GameState;
+use image::{ImageBuffer, Luma, Rgba, RgbaImage};
+use template_matching::{find_extremes, Image, MatchTemplateMethod, TemplateMatcher};
 
-pub fn detect_game_state(input_image_path: &str, data: &Data) -> GameState {
+pub fn detect_game_state<'a>(input_image_path: &str, data: &Data<'a>) -> GameState<'a> {
     let input_image = image::open(input_image_path).unwrap().to_luma32f();
     let mut ring = CircularList::new();
-    let mut player_atom: Option<Element> = None;
+    let mut player_atom: Option<&Element<'a>> = None;
     let mut max_value = 1;
     let mut score = 0;
 
@@ -21,7 +19,7 @@ pub fn detect_game_state(input_image_path: &str, data: &Data) -> GameState {
     );
 
     for element in &data.elements {
-        let template_image = match load_template_for_element(&element) {
+        let template_image = match load_template_for_element(element) {
             Some(img) => img,
             None => {
                 eprintln!("Missing template for element: {}", element.name);
@@ -54,14 +52,14 @@ pub fn detect_game_state(input_image_path: &str, data: &Data) -> GameState {
 
         // Determine if this is the player atom or part of the ring
         if is_player_atom_position(x, y, input_image.width(), input_image.height()) {
-            player_atom = Some(element.clone());
+            player_atom = Some(element);
         } else {
             let index = calculate_ring_index(x, y, input_image.width(), input_image.height());
             ring.insert(element.clone(), index);
         }
 
         // Update max_value if necessary
-        max_value = max_value.max(element_to_value(&element));
+        max_value = max_value.max(element_to_value(element));
     }
 
     // Save the output image for visualization
@@ -72,17 +70,17 @@ pub fn detect_game_state(input_image_path: &str, data: &Data) -> GameState {
     // Create and return the GameState
     GameState {
         ring,
-        player_atom: player_atom.unwrap_or_else(|| data.elements[0].clone()),
+        player_atom: player_atom
+            .cloned()
+            .unwrap_or_else(|| data.elements[0].clone()),
         max_value,
         score,
     }
 }
-
-fn load_template_for_element(element: &Element) -> Option<ImageBuffer<Luma<f32>, Vec<f32>>> {
-    let path = format!(
-        "C:/Obsidian/Rust/atomas/assets/png/{}.png",
-        element.name.to_lowercase()
-    );
+fn load_template_for_element<'a>(
+    element: &Element<'a>,
+) -> Option<ImageBuffer<Luma<f32>, Vec<f32>>> {
+    let path = format!("C:/Obsidian/Rust/atomas/assets/png/{}.png", element.name);
 
     match image::open(&path) {
         Ok(img) => Some(img.to_luma32f()),

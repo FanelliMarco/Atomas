@@ -4,17 +4,17 @@ use rand::Rng;
 use std::fmt;
 
 #[derive(Clone)]
-pub struct GameState {
-    pub ring: CircularList<Element>,
-    pub player_atom: Element,
+pub struct GameState<'a> {
+    pub ring: CircularList<Element<'a>>,
+    pub player_atom: Element<'a>,
     pub max_value: i32,
     pub score: i32,
 }
 
-impl GameState {
-    pub fn new(elements: &[Element]) -> Self {
+impl<'a> GameState<'a> {
+    pub fn new(elements: &[Element<'a>]) -> Self {
         let mut rng = rand::thread_rng();
-        let player_atom = elements[rng.gen_range(0..elements.len())].clone(); // why random?
+        let player_atom = elements[rng.gen_range(0..elements.len())].clone();
 
         GameState {
             ring: CircularList::new(),
@@ -23,30 +23,9 @@ impl GameState {
             score: 0,
         }
     }
-
-    pub fn add_atom_to_ring(&mut self, index: usize) {
-        self.ring.insert(self.player_atom.clone(), index);
-        self.update_max_value();
-        self.generate_new_player_atom();
-    }
-
-    pub fn update_max_value(&mut self) {
-        // Implement logic to update max_value based on the ring
-    }
-
-    pub fn generate_new_player_atom(&mut self) {
-        // Implement logic to generate a new player atom
-    }
-
-    pub fn check_fusion(&mut self, _index: usize) -> bool {
-        // Implement fusion logic
-        false
-    }
-
-    // Implement other game logic methods
 }
 
-impl fmt::Debug for GameState {
+impl<'a> fmt::Debug for GameState<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "GameState {{")?;
         writeln!(f, "  ring: [")?;
