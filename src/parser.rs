@@ -3,6 +3,7 @@ use crate::elements::{Data, Element};
 use crate::gamestate::GameState;
 use image::{ImageBuffer, Luma, Rgba, RgbaImage};
 use template_matching::{find_extremes, Image, MatchTemplateMethod, TemplateMatcher};
+use crate::adjmatrix::AdjMatrix;
 
 pub fn detect_game_state<'a>(input_image_path: &str, data: &Data<'a>) -> GameState<'a> {
     let input_image = image::open(input_image_path).unwrap().to_luma32f();
@@ -68,14 +69,20 @@ pub fn detect_game_state<'a>(input_image_path: &str, data: &Data<'a>) -> GameSta
         .unwrap();
 
     // Create and return the GameState
-    GameState {
+    let mut game_state = GameState {
         ring,
         player_atom: player_atom
             .cloned()
             .unwrap_or_else(|| data.elements[0].clone()),
         max_value,
         score,
-    }
+        adj_matrix: AdjMatrix::new(12),
+    };
+
+    // Update the adjacency matrix
+    game_state.update_adjacency();
+
+    game_state
 }
 fn load_template_for_element<'a>(
     element: &Element<'a>,

@@ -2,6 +2,7 @@ mod circularlist;
 mod elements;
 mod gamestate;
 mod parser;
+mod adjmatrix;
 
 fn main() {
     let path = "C:/Obsidian/Rust/atomas/assets/txt/elements.txt";
