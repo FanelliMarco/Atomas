@@ -1,14 +1,14 @@
 use crate::circularlist::CircularList;
-use crate::elements::{Data, Element};
+use atomas_core::{Data, Element};
 use crate::gamestate::GameState;
 use image::{ImageBuffer, Luma, Rgba, RgbaImage};
 use template_matching::{find_extremes, Image, MatchTemplateMethod, TemplateMatcher};
 use crate::adjmatrix::AdjMatrix;
 
-pub fn detect_game_state<'a>(input_image_path: &str, data: &Data<'a>) -> GameState<'a> {
+pub fn detect_game_state<'a>(input_image_path: &str, data: &'a Data) -> GameState<'a> {
     let input_image = image::open(input_image_path).unwrap().to_luma32f();
     let mut ring = CircularList::new();
-    let mut player_atom: Option<&Element<'a>> = None;
+    let mut player_atom: Option<Element<'a>> = None;
     let mut max_value = 1;
     let mut score = 0;
 
@@ -53,7 +53,7 @@ pub fn detect_game_state<'a>(input_image_path: &str, data: &Data<'a>) -> GameSta
 
         // Determine if this is the player atom or part of the ring
         if is_player_atom_position(x, y, input_image.width(), input_image.height()) {
-            player_atom = Some(element);
+            player_atom = Some(element.clone());
         } else {
             let index = calculate_ring_index(x, y, input_image.width(), input_image.height());
             ring.insert(element.clone(), index);
@@ -72,7 +72,6 @@ pub fn detect_game_state<'a>(input_image_path: &str, data: &Data<'a>) -> GameSta
     let mut game_state = GameState {
         ring,
         player_atom: player_atom
-            .cloned()
             .unwrap_or_else(|| data.elements[0].clone()),
         max_value,
         score,
@@ -84,8 +83,9 @@ pub fn detect_game_state<'a>(input_image_path: &str, data: &Data<'a>) -> GameSta
 
     game_state
 }
-fn load_template_for_element<'a>(
-    element: &Element<'a>,
+
+fn load_template_for_element(
+    element: &Element,
 ) -> Option<ImageBuffer<Luma<f32>, Vec<f32>>> {
     let path = format!("C:/Obsidian/Rust/atomas/assets/png/{}.png", element.name);
 

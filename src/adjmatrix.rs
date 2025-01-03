@@ -1,5 +1,5 @@
 use crate::circularlist::CircularList;
-use crate::elements::Element;
+use atomas_core::Element;
 use std::fmt;
 
 #[derive(Debug, Clone)]

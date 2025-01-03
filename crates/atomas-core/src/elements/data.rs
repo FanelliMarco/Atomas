@@ -1,49 +1,9 @@
-use serde::{Deserialize, Serialize};
-use std::fmt;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
-pub enum Id {
-    Single(char),
-    Double([char; 2]),
-    Triple([char; 3]),
-}
-
-impl Id {
-    fn from_chars(chars: &[char]) -> Self {
-        match chars.len() {
-            1 => Id::Single(chars[0]),
-            2 => Id::Double([chars[0], chars[1]]),
-            3 => Id::Triple([chars[0], chars[1], chars[2]]),
-            _ => panic!("Invalid id length"),
-        }
-    }
-}
-
-#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
-pub struct Element<'a> {
-    pub id: Id,
-    #[serde(borrow)]
-    pub name: &'a str,
-    pub rgb: (u8, u8, u8),
-}
-
-impl<'a> fmt::Display for Element<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match &self.id {
-            Id::Single(c) => write!(f, "{}", c)?,
-            Id::Double(id) => write!(f, "{}", id.iter().collect::<String>())?,
-            Id::Triple(id) => write!(f, "{}", id.iter().collect::<String>())?,
-        }
-
-        write!(
-            f,
-            " {} ({}, {}, {})",
-            self.name, self.rgb.0, self.rgb.1, self.rgb.2
-        )
-    }
-}
+use crate::elements::element::Element;
+use crate::elements::id::Id;
+use crate::elements::types::ElementType;
 
 #[derive(Debug)]
 pub struct Data<'a> {
@@ -72,6 +32,7 @@ impl Data<'static> {
 
             let element = Element {
                 id: Id::from_chars(id.chars().collect::<Vec<char>>().as_slice()),
+                element_type: ElementType::Periodic(1),
                 name: Box::leak(name.into_boxed_str()),
                 rgb: (red, green, blue),
             };
