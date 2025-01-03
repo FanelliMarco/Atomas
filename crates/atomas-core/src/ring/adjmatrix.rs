@@ -1,6 +1,7 @@
-use crate::circularlist::CircularList;
-use atomas_core::Element;
+use crate::elements::Element;
+use crate::ring::CircularList;
 use std::fmt;
+
 
 #[derive(Debug, Clone)]
 pub struct AdjMatrix<'a> {

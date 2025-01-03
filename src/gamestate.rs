@@ -1,6 +1,7 @@
-use crate::circularlist::CircularList;
-use atomas_core::Element;
-use crate::adjmatrix::AdjMatrix;
+use atomas_core::{
+    elements::Element,
+    ring::{CircularList, AdjMatrix},
+};
 use rand::Rng;
 use std::fmt;
 

@@ -1,9 +1,10 @@
-use crate::circularlist::CircularList;
-use atomas_core::{Data, Element};
+use atomas_core::{
+    elements::{Element, ElementType, Data},
+    ring::{CircularList, AdjMatrix},
+};
 use crate::gamestate::GameState;
 use image::{ImageBuffer, Luma, Rgba, RgbaImage};
 use template_matching::{find_extremes, Image, MatchTemplateMethod, TemplateMatcher};
-use crate::adjmatrix::AdjMatrix;
 
 pub fn detect_game_state<'a>(input_image_path: &str, data: &'a Data) -> GameState<'a> {
     let input_image = image::open(input_image_path).unwrap().to_luma32f();
